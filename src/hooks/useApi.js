@@ -33,20 +33,19 @@ export const useApi = () => {
             // Manejar diferentes estructuras de respuesta
             let data;
             if (result.data) {
-                // Estructura de producción: { data: {...}, message: "...", success: true }
                 data = result.data;
             } else if (result.proveedor && result.items) {
-                // Estructura local directa: { proveedor: "...", items: [...] }
                 data = result;
             } else {
-                // Intentar encontrar datos en cualquier propiedad
                 data = result;
             }
 
-            console.log('Datos extraídos para el componente:', data);
+            // Normalizar los nombres de las propiedades a mayúsculas
+            const normalizedData = normalizeData(data);
+            console.log('Datos normalizados:', normalizedData);
 
             setLoading(false);
-            return data;
+            return normalizedData;
         } catch (err) {
             console.error('Error en useApi:', err);
             const errorMessage = err.message || 'Error al conectar con el servidor';
@@ -54,6 +53,33 @@ export const useApi = () => {
             setLoading(false);
             throw err;
         }
+    };
+
+    // Función para normalizar nombres de propiedades
+    const normalizeData = (data) => {
+        if (!data) return data;
+
+        return {
+            proveedor: data.proveedor || 'Proveedor no especificado',
+            formato_detectado: data.formato_detectado || 'Desconocido',
+            total_items: data.total_items || 0,
+            items: Array.isArray(data.items) ? data.items.map(normalizeItem) : []
+        };
+    };
+
+    const normalizeItem = (item) => {
+        if (!item) return {};
+
+        // Mapear nombres en minúsculas a mayúsculas
+        return {
+            Item: item.Item || item.item || '',
+            Referencia: item.Referencia || item.referencia || '',
+            Descripcion: item.Descripcion || item.descripcion || '',
+            Unid: item.Unid || item.unidad || item.Unidad || 'UN',
+            Cant: item.Cant || item.cantidad || item.Cantidad || '0',
+            V_Unit: item.V_Unit || item.v_unit || item.valor_unitario || '0',
+            Valor_Total: item.Valor_Total || item.valor_total || '0'
+        };
     };
 
     return { uploadPDF, loading, error };
