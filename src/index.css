@@ -1,0 +1,140 @@
+/* CSS basado en tu Dashboard.txt (adaptado) */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;600;700;800;900&display=swap');
+
+
+:root {
+    --bg: #1e1e1e;
+    --card: #171717;
+    --muted: #9b9b9b
+}
+
+
+* {
+    box-sizing: border-box
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: 'Nunito', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--muted);
+}
+
+
+/* Reglas adaptadas del Dashboard.txt */
+.bg-card {
+    background: var(--card);
+}
+
+.rounded-lg {
+    border-radius: 12px;
+}
+
+.p-2 {
+    padding: 8px;
+}
+
+
+input {
+    color: #e5e5e5;
+    border: none;
+    outline: none;
+    background: #171717;
+    padding: 10px 12px;
+    border-radius: 8px;
+    width: 100%;
+}
+
+
+/* layout básico */
+.app-shell {
+    display: flex;
+    min-height: 100vh
+}
+
+.sidebar {
+    width: 260px;
+    padding: 12px;
+    background: var(--card);
+    position: fixed;
+    height: 100vh
+}
+
+.content {
+    margin-left: 280px;
+    padding: 16px;
+    flex: 1
+}
+
+
+.card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+
+/* utilidades */
+.flex {
+    display: flex
+}
+
+.items-center {
+    align-items: center
+}
+
+.justify-between {
+    justify-content: space-between
+}
+
+.text-white {
+    color: #fff
+}
+
+.font-bold {
+    font-weight: 700
+}
+
+/* Scrollbar minimalista */
+.scroll-minimal::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scroll-minimal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroll-minimal::-webkit-scrollbar-thumb {
+    background: rgba(75, 85, 99, 0.3);
+    border-radius: 2px;
+}
+
+.scroll-minimal::-webkit-scrollbar-thumb:hover {
+    background: rgba(75, 85, 99, 0.5);
+}
+
+/* Para Firefox */
+.scroll-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(75, 85, 99, 0.3) transparent;
+}
+
+
+/* responsive small tweaks */
+@media (max-width:800px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto
+    }
+
+    .content {
+        margin-left: 0
+    }
+}
