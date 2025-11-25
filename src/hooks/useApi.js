@@ -12,21 +12,28 @@ export const useApi = () => {
         setError(null);
 
         try {
+            console.log('Enviando PDF al backend...');
+
             const response = await fetch(`${API_BASE_URL}/upload-pdf`, {
                 method: 'POST',
                 body: formData,
-                // No incluir 'Content-Type' header - el navegador lo establecerá automáticamente con el boundary
             });
+
+            console.log('Respuesta recibida:', response.status, response.statusText);
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('Error del servidor:', errorText);
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
 
             const data = await response.json();
+            console.log('Datos recibidos del backend:', data);
+
             setLoading(false);
             return data;
         } catch (err) {
+            console.error('Error en useApi:', err);
             const errorMessage = err.message || 'Error al conectar con el servidor';
             setError(errorMessage);
             setLoading(false);
