@@ -4,62 +4,74 @@ import { useApi } from '../hooks/useApi';
 
 const FacturaUploader = () => {
     const [facturaData, setFacturaData] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const { uploadPDF, loading, error } = useApi(); // ✅ Hook usado correctamente
 
     const handleFileUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
         if (file.type !== 'application/pdf') {
-            setError('Por favor, selecciona un archivo PDF');
+            alert('Por favor, selecciona un archivo PDF');
             return;
         }
 
-        setLoading(true);
-        setError(null);
+        setSelectedFile(file);
+        await handleSubmit(file);
+    };
+
+    const handleSubmit = async (file) => {
+        if (!file) {
+            alert('Por favor selecciona un archivo PDF');
+            return;
+        }
 
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            const data = await useApi().uploadPDF(formData);
+            // ✅ Usar el hook correctamente
+            const data = await uploadPDF(formData);
             console.log('Datos normalizados recibidos:', data);
 
-            if (data.error) {
+            if (data && data.error) {
                 throw new Error(data.error);
             }
 
             setFacturaData(data);
         } catch (err) {
-            setError(err.message);
             console.error('Error:', err);
-        } finally {
-            setLoading(false);
+            // El error ya está manejado por el hook
         }
     };
 
     const formatCurrency = (value) => {
         if (!value) return '$0.00';
 
-        const num = parseFloat(value.toString().replace(',', '.'));
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 3
-        }).format(num);
+        try {
+            const num = parseFloat(value.toString().replace(',', '.'));
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 3
+            }).format(num);
+        } catch (e) {
+            return '$0.00';
+        }
     };
 
     const formatNumber = (value) => {
         if (!value) return '0';
 
-        const num = parseFloat(value.toString().replace(',', '.'));
-
-        // Formato colombiano con separadores de miles
-        return num.toLocaleString('es-CO', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
+        try {
+            const num = parseFloat(value.toString().replace(',', '.'));
+            return num.toLocaleString('es-CO', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        } catch (e) {
+            return '0';
+        }
     };
 
     const handlePlusClick = () => {
@@ -113,6 +125,7 @@ const FacturaUploader = () => {
                     accept=".pdf"
                     onChange={handleFileUpload}
                     style={{ display: 'none' }}
+                    disabled={loading}
                 />
             </div>
 
@@ -212,15 +225,14 @@ const FacturaUploader = () => {
                             right: 0,
                             bottom: 0,
                             overflowY: 'auto',
-                            paddingRight: '4px',
-                            className: "scroll-minimal"
+                            paddingRight: '4px'
                         }}>
                             <div style={{
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '6px'
                             }}>
-                                {facturaData.items.map((item, index) => (
+                                {facturaData.items && facturaData.items.map((item, index) => (
                                     <div
                                         key={`${item.Item}-${index}`}
                                         style={{
@@ -255,7 +267,7 @@ const FacturaUploader = () => {
                                             color: '#60a5fa',
                                             flexShrink: 0
                                         }}>
-                                            {item.Item}
+                                            {item.Item || index + 1}
                                         </div>
 
                                         {/* Referencia */}
@@ -268,7 +280,7 @@ const FacturaUploader = () => {
                                             fontSize: '11px',
                                             fontFamily: 'monospace'
                                         }}>
-                                            {item.Referencia}
+                                            {item.Referencia || 'N/A'}
                                         </div>
 
                                         {/* Descripción */}
@@ -282,7 +294,7 @@ const FacturaUploader = () => {
                                             whiteSpace: 'nowrap',
                                             lineHeight: '1.3'
                                         }}>
-                                            {item.Descripcion}
+                                            {item.Descripcion || 'Descripción no disponible'}
                                         </div>
 
                                         {/* Cantidad */}
@@ -295,7 +307,7 @@ const FacturaUploader = () => {
                                             flexShrink: 0,
                                             fontWeight: 500
                                         }}>
-                                            {item.Cant}
+                                            {item.Cant || '0'}
                                         </div>
 
                                         {/* Valor Total */}
@@ -334,8 +346,8 @@ const FacturaUploader = () => {
                         </div>
                         <div style={{ fontWeight: 500 }}>
                             Total: <span style={{ color: '#34d399', fontWeight: 600 }}>
-                                {formatCurrency(facturaData.items.reduce((total, item) =>
-                                    total + parseFloat(item.Valor_Total.toString().replace(',', '.') || 0), 0
+                                {formatCurrency(facturaData.items && facturaData.items.reduce((total, item) =>
+                                    total + parseFloat((item.Valor_Total || 0).toString().replace(',', '.') || 0), 0
                                 ))}
                             </span>
                         </div>
