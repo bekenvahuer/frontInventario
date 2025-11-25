@@ -1,4 +1,4 @@
-// hooks/useApi.js (versión simplificada)
+// hooks/useApi.js
 import { useState } from 'react';
 
 const API_BASE_URL = 'https://backinventario.onrender.com';
@@ -12,24 +12,43 @@ export const useApi = () => {
         setError(null);
 
         try {
+            console.log('Enviando PDF al backend...');
+
             const response = await fetch(`${API_BASE_URL}/upload-pdf`, {
                 method: 'POST',
                 body: formData,
             });
 
+            console.log('Respuesta recibida:', response.status, response.statusText);
+
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('Error del servidor:', errorText);
                 throw new Error(`Error ${response.status}: ${errorText}`);
             }
 
             const result = await response.json();
+            console.log('Respuesta completa del backend:', result);
 
-            // Extraer los datos de la propiedad 'data' o usar el objeto completo
-            const data = result.data || result;
+            // Manejar diferentes estructuras de respuesta
+            let data;
+            if (result.data) {
+                // Estructura de producción: { data: {...}, message: "...", success: true }
+                data = result.data;
+            } else if (result.proveedor && result.items) {
+                // Estructura local directa: { proveedor: "...", items: [...] }
+                data = result;
+            } else {
+                // Intentar encontrar datos en cualquier propiedad
+                data = result;
+            }
+
+            console.log('Datos extraídos para el componente:', data);
 
             setLoading(false);
             return data;
         } catch (err) {
+            console.error('Error en useApi:', err);
             const errorMessage = err.message || 'Error al conectar con el servidor';
             setError(errorMessage);
             setLoading(false);

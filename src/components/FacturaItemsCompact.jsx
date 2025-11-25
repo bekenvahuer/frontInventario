@@ -31,177 +31,45 @@ const FacturaUploader = () => {
 
         try {
             const data = await uploadPDF(formData);
-            console.log('Datos procesados en componente:', data);
+            console.log('Datos recibidos en componente:', data);
 
-            // Validar la estructura de datos antes de establecer el estado
+            // Validar estructura de datos
             if (!data) {
                 throw new Error('No se recibieron datos del servidor');
             }
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            // Asegurarnos de que items sea un array
+            // Asegurar que items sea un array
             const processedData = {
-                ...data,
-                items: Array.isArray(data.items) ? data.items : [],
-                total_items: data.total_items || 0,
                 proveedor: data.proveedor || 'Proveedor no especificado',
-                formato_detectado: data.formato_detectado || 'Desconocido'
+                formato_detectado: data.formato_detectado || 'Desconocido',
+                total_items: data.total_items || (data.items ? data.items.length : 0),
+                items: Array.isArray(data.items) ? data.items : []
             };
 
+            console.log('Datos procesados para mostrar:', processedData);
             setFacturaData(processedData);
         } catch (err) {
             console.error('Error al procesar la respuesta:', err);
-            // El error ya está manejado en el hook useApi
         }
     };
 
     const formatCurrency = (value) => {
         if (!value) return '$0.00';
 
-        const num = parseFloat(value.toString().replace(',', '.'));
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 3
-        }).format(num);
+        try {
+            const num = parseFloat(value.toString().replace(',', '.'));
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 3
+            }).format(num);
+        } catch (e) {
+            return '$0.00';
+        }
     };
 
     const handlePlusClick = () => {
         document.getElementById('pdf-upload').click();
-    };
-
-    // Función para renderizar los items de forma segura
-    const renderItems = () => {
-        if (!facturaData || !facturaData.items || !Array.isArray(facturaData.items)) {
-            return (
-                <div style={{
-                    padding: '20px',
-                    textAlign: 'center',
-                    color: '#9ca3af',
-                    fontSize: '14px'
-                }}>
-                    No hay items para mostrar
-                </div>
-            );
-        }
-
-        if (facturaData.items.length === 0) {
-            return (
-                <div style={{
-                    padding: '20px',
-                    textAlign: 'center',
-                    color: '#9ca3af',
-                    fontSize: '14px'
-                }}>
-                    No se encontraron items en la factura
-                </div>
-            );
-        }
-
-        return (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px'
-            }}>
-                {facturaData.items.map((item, index) => (
-                    <div
-                        key={item.Item ? `${item.Item}-${index}` : `item-${index}`}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '10px 12px',
-                            backgroundColor: 'rgba(55, 65, 81, 0.3)',
-                            borderRadius: '6px',
-                            transition: 'all 0.2s ease',
-                            border: '1px solid transparent'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.5)';
-                            e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.3)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.3)';
-                            e.currentTarget.style.borderColor = 'transparent';
-                        }}
-                    >
-                        {/* Número de Item */}
-                        <div style={{
-                            width: '20px',
-                            height: '20px',
-                            backgroundColor: 'rgba(96, 165, 250, 0.2)',
-                            borderRadius: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            color: '#60a5fa',
-                            flexShrink: 0
-                        }}>
-                            {item.Item || index + 1}
-                        </div>
-
-                        {/* Referencia */}
-                        <div style={{
-                            marginLeft: '10px',
-                            fontWeight: 600,
-                            color: '#93c5fd',
-                            width: '70px',
-                            flexShrink: 0,
-                            fontSize: '11px',
-                            fontFamily: 'monospace'
-                        }}>
-                            {item.Referencia || 'N/A'}
-                        </div>
-
-                        {/* Descripción */}
-                        <div style={{
-                            marginLeft: '10px',
-                            color: '#e5e7eb',
-                            fontSize: '12px',
-                            flex: 1,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            lineHeight: '1.3'
-                        }}>
-                            {item.Descripcion || 'Descripción no disponible'}
-                        </div>
-
-                        {/* Cantidad */}
-                        <div style={{
-                            marginLeft: '10px',
-                            fontSize: '11px',
-                            color: '#9ca3af',
-                            width: '40px',
-                            textAlign: 'center',
-                            flexShrink: 0,
-                            fontWeight: 500
-                        }}>
-                            {item.Cant || '0'}
-                        </div>
-
-                        {/* Valor Total */}
-                        <div style={{
-                            marginLeft: '10px',
-                            fontWeight: 600,
-                            color: '#34d399',
-                            width: '80px',
-                            textAlign: 'right',
-                            fontSize: '11px',
-                            flexShrink: 0,
-                            fontFamily: 'monospace'
-                        }}>
-                            {formatCurrency(item.Valor_Total)}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
     };
 
     return (
@@ -353,7 +221,116 @@ const FacturaUploader = () => {
                             overflowY: 'auto',
                             paddingRight: '4px'
                         }}>
-                            {renderItems()}
+                            {facturaData.items && facturaData.items.length > 0 ? (
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '6px'
+                                }}>
+                                    {facturaData.items.map((item, index) => (
+                                        <div
+                                            key={`${item.Item}-${index}`}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                padding: '10px 12px',
+                                                backgroundColor: 'rgba(55, 65, 81, 0.3)',
+                                                borderRadius: '6px',
+                                                transition: 'all 0.2s ease',
+                                                border: '1px solid transparent'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.5)';
+                                                e.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.3)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.3)';
+                                                e.currentTarget.style.borderColor = 'transparent';
+                                            }}
+                                        >
+                                            {/* Número de Item */}
+                                            <div style={{
+                                                width: '20px',
+                                                height: '20px',
+                                                backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                                                borderRadius: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                color: '#60a5fa',
+                                                flexShrink: 0
+                                            }}>
+                                                {item.Item || index + 1}
+                                            </div>
+
+                                            {/* Referencia */}
+                                            <div style={{
+                                                marginLeft: '10px',
+                                                fontWeight: 600,
+                                                color: '#93c5fd',
+                                                width: '70px',
+                                                flexShrink: 0,
+                                                fontSize: '11px',
+                                                fontFamily: 'monospace'
+                                            }}>
+                                                {item.Referencia || 'N/A'}
+                                            </div>
+
+                                            {/* Descripción */}
+                                            <div style={{
+                                                marginLeft: '10px',
+                                                color: '#e5e7eb',
+                                                fontSize: '12px',
+                                                flex: 1,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                lineHeight: '1.3'
+                                            }}>
+                                                {item.Descripcion || 'Descripción no disponible'}
+                                            </div>
+
+                                            {/* Cantidad */}
+                                            <div style={{
+                                                marginLeft: '10px',
+                                                fontSize: '11px',
+                                                color: '#9ca3af',
+                                                width: '40px',
+                                                textAlign: 'center',
+                                                flexShrink: 0,
+                                                fontWeight: 500
+                                            }}>
+                                                {item.Cant || '0'}
+                                            </div>
+
+                                            {/* Valor Total */}
+                                            <div style={{
+                                                marginLeft: '10px',
+                                                fontWeight: 600,
+                                                color: '#34d399',
+                                                width: '80px',
+                                                textAlign: 'right',
+                                                fontSize: '11px',
+                                                flexShrink: 0,
+                                                fontFamily: 'monospace'
+                                            }}>
+                                                {formatCurrency(item.Valor_Total)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{
+                                    padding: '20px',
+                                    textAlign: 'center',
+                                    color: '#9ca3af',
+                                    fontSize: '14px'
+                                }}>
+                                    No se encontraron items en la factura
+                                </div>
+                            )}
                         </div>
                     </div>
 
